@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
+    <title>GraphVis定制化功能</title>
+    <!-- 界面引入GraphVis可视化核心组件库 -->
+    <script src="/graphvis.js"></script>
+    <script src="/gvis.xmind.js"></script>
+  </head>
+  <body>
+    <div style="position: absolute; top: 20px; right: 30px; z-index: 999">
+      <a href="javascript:;" onclick="javascript:downLoadImage();">保存图片</a>
+
+      <a href="javascript:;" onclick="javascript:reload('data1');"
+        >示例数据一</a
+      >
+      <a href="javascript:;" onclick="javascript:reload('data2');"
+        >示例数据二</a
+      >
+    </div>
+
+    <!-- 模拟节点提示 -->
+    <div
+      id="nodeTips"
+      style="
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        z-index: 999;
+        width: 200px;
+        height: 100px;
+        display: none;
+      "
+    ></div>
+
+    <!-- 定义画布展示元素,id将被用来设置可视化区域，需要指定width和height样式 -->
+    <div
+      id="graph-panel"
+      style="height: calc(100vh - 16px); background-color: #e8f6fa"
+    ></div>
+
+    <script type="text/javascript">
+      const dataCache = {
+        data1: {
+          id: 1,
+          name: '中华人民共和国',
+          edgeNum: 1,
+          children: [
+            {
+              id: 11,
+              name: '浙江省',
+              warnText: '当前级别：III级',
+              edgeNum: 1,
+              children: [
+                { id: 111, name: '杭州' },
+                { id: 112, name: '宁波' },
+                { id: 113, name: '温州' },
+                { id: 114, name: '绍兴' },
+              ],
+            },
+            {
+              id: 12,
+              name: '广西壮族自治区',
+              edgeNum: 1,
+              children: [
+                {
+                  id: 121,
+                  name: '桂林市',
+                  edgeNum: 1,
+                  children: [
+                    { id: 1211, name: '秀峰区' },
+                    { id: 1212, name: '叠彩区' },
+                    { id: 1213, name: '象山区' },
+                    { id: 1214, name: '七星区' },
+                  ],
+                },
+                { id: 122, name: '南宁' },
+                { id: 123, name: '柳州' },
+                { id: 124, name: '防城港' },
+              ],
+            },
+            {
+              id: 13,
+              name: '黑龙江省',
+              edgeNum: 1,
+              children: [
+                { id: 131, name: '哈尔滨市', warnText: '当前级别：II级' },
+                { id: 132, name: '齐齐哈尔' },
+                { id: 133, name: '牡丹江' },
+                { id: 134, name: '大庆' },
+              ],
+            },
+            {
+              id: 14,
+              name: '新疆维吾尔自治区',
+              warnText: '当前进度，开始转移',
+              edgeNum: 1,
+              children: [
+                { id: 141, name: '乌鲁木齐' },
+                { id: 142, name: '克拉玛依' },
+                { id: 143, name: '吐鲁番' },
+                { id: 144, name: '哈密' },
+              ],
+            },
+            {
+              id: 15,
+              name: '甘肃省',
+              warnText: '要注意',
+              edgeNum: 1,
+              children: [
+                { id: 151, name: '兰州市' },
+                { id: 152, name: '白银市' },
+                {
+                  id: 153,
+                  name: '平凉市',
+                  warnText: '当前进度，开始转移',
+                  edgeNum: 1,
+                  children: [
+                    { id: 1531, name: '崆峒区' },
+                    { id: 1532, name: '静宁县' },
+                    { id: 1533, name: '灵台县' },
+                    { id: 1534, name: '庄浪县' },
+                  ],
+                },
+                {
+                  id: 154,
+                  name: '武威市',
+                  edgeNum: 1,
+                  children: [
+                    { id: 1541, name: '凉州区' },
+                    { id: 1542, name: '民勤县' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        data2: {
+          id: 'root',
+          name: '新员工入职',
+          edgeNum: 1,
+          children: [
+            {
+              id: 'easy',
+              name: '规章制度',
+              warnText: '当前级别：III级',
+              direction: 'right',
+              edgeNum: 1,
+              children: [
+                { id: 'easy1', name: '请休假制度', warnText: '当前级别：II级' },
+                { id: 'easy2', name: '考勤制度' },
+              ],
+            },
+            {
+              id: 'open',
+              name: '岗位职责',
+              warnText: '当前级别：IIII级',
+              direction: 'right',
+              edgeNum: 1,
+              children: [
+                {
+                  id: 'open1',
+                  name: '人事部职责',
+                  'background-color': '#eee',
+                  'foreground-color': 'blue',
+                  edgeNum: 1,
+                  children: [
+                    { id: 'open1-1', name: '行政管理' },
+                    { id: 'open1-2', name: '人事管理' },
+                  ],
+                },
+                { id: 'open2', name: '信息部职责' },
+                {
+                  id: 'open3',
+                  name: '生产车间',
+                  edgeNum: 1,
+                },
+              ],
+            },
+            {
+              id: 'powerful',
+              name: '员工福利',
+              warnText: '当前进度：需要注意',
+              direction: 'right',
+              edgeNum: 1,
+              children: [
+                { id: '1powerful1', name: '五险一金' },
+                { id: '1powerful2', name: '年休假' },
+                {
+                  id: '1powerful3',
+                  name: '法定节假日',
+                  edgeNum: 1,
+                  children: [
+                    { id: '11powerful11', name: '五险一金' },
+                    { id: '112powerful21', name: '年休假' },
+                    { id: '112powerful31', name: '法定节假日' },
+                    { id: '112powerful41', name: '生日祝福' },
+                    {
+                      id: '211powerful51',
+                      name: '成长与进步',
+                      edgeNum: 1,
+                      children: [
+                        { id: '211powerful12', name: '五险一金' },
+                        { id: '211powerful22', name: '年休假' },
+                        { id: '211powerful32', name: '法定节假日' },
+                        { id: '211powerful42', name: '生日祝福', edgeNum: 1 },
+                        {
+                          id: '211powerful56',
+                          name: '成长与进步',
+                          edgeNum: 1,
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: '1powerful4',
+                  name: '生日祝福',
+                  edgeNum: 1,
+                  children: [
+                    { id: '2powerful11', name: '五险一金' },
+                    { id: '2powerful21', name: '年休假' },
+                    { id: '2powerful31', name: '法定节假日' },
+                    { id: '2powerful41', name: '生日祝福' },
+                    {
+                      id: '2powerful51',
+                      name: '成长与进步',
+                      edgeNum: 1,
+                      children: [
+                        { id: '2powerful12', name: '五险一金' },
+                        { id: '2powerful22', name: '年休假' },
+                        { id: '2powerful32', name: '法定节假日' },
+                        { id: '2powerful42', name: '生日祝福' },
+                        {
+                          id: '2powerful56',
+                          name: '成长与进步',
+                          edgeNum: 1,
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: 'powerful5',
+                  name: '成长与进步',
+                  edgeNum: 1,
+                  children: [
+                    { id: 'powerful11', name: '五险一金' },
+                    { id: 'powerful21', name: '年休假' },
+                    { id: 'powerful31', name: '法定节假日' },
+                    { id: 'powerful41', name: '生日祝福' },
+                    {
+                      id: 'powerful51',
+                      name: '成长与进步',
+                      edgeNum: 1,
+                      children: [
+                        { id: 'powerful12', name: '五险一金' },
+                        { id: 'powerful22', name: '年休假' },
+                        { id: 'powerful32', name: '法定节假日' },
+                        { id: 'powerful42', name: '生日祝福' },
+                        {
+                          id: 'powerful56',
+                          name: '成长与进步',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      //模拟当前数据库中关系数据,扩展时从这个结构中查找children
+      const currentTreeData = dataCache['data2'];
+
+      //初始化示例数据,节点中edgeNum属性大于0时，会显示【+】号
+      var initData = currentTreeData;
+       debugger
+      //构建Xminder对象
+      let xminder = new GraphVisXmind('graph-panel', initData, {
+        nodePadding: 30, //节点内边距
+        levelSpace: 150, //层级间距
+        nodeSpace: 10, //上下节点间距
+        animate: true, //动画开关
+        type: 'lcr', //左中右布局样式
+
+        /* onClick: function(event, node) {//节点鼠标点击事件
+							showNodeTip(node);
+						},
+						onMouseOver: function(event, node) {//节点鼠标移入事件
+							node.headTipText=node.label;//设置节点顶部提示文字
+							node.headTipColor='100,100,250';//提示气泡的颜色 '250,50,50' 
+							node.headTipFontColor='250,250,250';//提示文字颜色
+							node.headTipFont = 'normal 16px KaiTi'; //提示文字大小及样式
+							node.headTipRadius = 5; //提示气泡的圆角大小 
+						},
+						onMouseOut: function(event, node) {//节点鼠标移出事件
+							node.headTipText=null; 
+						},
+						noElementClick: function(event,graphvis) {//空白区域的点击事件
+							hideNodeTips();
+						}, */
+        removeChildNode: function () {
+          console.log('xxxx');
+        },
+        appendChildNode: function (node) {
+          console.log(node);
+          //动态追加叶子节点的方法
+          var childNodes = searchData(node.id); //查询子节点数组
+          if (childNodes.length > 0) {
+            xminder.expendChild(node, childNodes); //追加节点的children
+          }
+        },
+      });
+
+      //重新加载数据
+      function reload(dataKey) {
+        console.log(xminder);
+        // xminder.reloadData(dataCache[dataKey]); //重新加载数据
+      }
+
+      //存图片
+      function downLoadImage() {
+        xminder.saveImage('结构图', 'png'); //保存图片
+      }
+
+      //展示节点提示
+      function showNodeTip(node) {
+        var pagePos = xminder.getPositionInDom(node);
+        var left = pagePos.pageX - 100;
+        var top = pagePos.pageY + node.height / 2;
+        var tipDom = document.getElementById('nodeTips');
+        tipDom.style.cssText = `left:${left}px;top:${top}px;position:absolute;z-index:9;width:200px;height:100px;background-color:#c8d112;`;
+
+        tipDom.innerText = `我是节点：${node.label}`;
+      }
+
+      /**
+       * 模拟ajax从服务端接口返回子节点数组
+       * 组件内部有缓存，从缓存中取数据，模拟服务端返回，实际业务需要接口返回
+       * [
+       *	{id:xxx,name:'xxx','edgeNum':1,children:[{id:yyy,name:'yyy'}]},
+       *  {id:xxx1,name:'xxx1'},
+       * ]
+       */
+      function searchData(nodeId) {
+        if (nodeId == 1) {
+          return currentTreeData.children;
+        }
+        var childNodes = xminder.idMapChildNode[nodeId];
+
+        return childNodes || [];
+      }
+
+      //隐藏节点提示层
+      function hideNodeTips() {
+        var tipDom = document.getElementById('nodeTips');
+        tipDom.style.display = 'none';
+      }
+
+      //绑定鼠标滚轮事件，隐藏节点提示层
+      bindWheelEvent();
+      function bindWheelEvent() {
+        var graphPanel = document.getElementById('graph-panel');
+        graphPanel.onwheel = function () {
+          hideNodeTips();
+        };
+      }
+    </script>
+  </body>
+</html>
